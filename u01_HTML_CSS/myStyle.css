@@ -3,3 +3,23 @@ p {
     font-family: Constantia;
     text-align: center;
 }
+
+h1 {
+    color: red;
+}
+
+th {
+    color: blue;
+}
+
+/* image tags, margin/padding/borders */
+
+img {
+    border: 5px solid red;
+    padding: 100px;
+    margin: 100px;
+}
+
+body {
+    border: 2px solid black;
+}
