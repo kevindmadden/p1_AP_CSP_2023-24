@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <canvas id="canvas" width="500px" height="500px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+    <p id="coordinateValues">Coordinates - x: 0, y: 0</p>
+    <script>
+        //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+        const canvas = document.getElementById("canvas")
+        const ctx = canvas.getContext("2d")
+
+        //Simple shape
+        drawTriangle(0,0)
+        drawTriangle(50,100)
+        drawTriangle(200,-70)
+
+
+
+
+
+        //Self-Created Functions
+        function drawTriangle(xPos, yPos){
+
+            ctx.beginPath()
+            ctx.moveTo( 20+xPos, 200+yPos)
+            ctx.lineTo(180+xPos, 60+yPos)
+            ctx.lineTo(340+xPos, 100+yPos)
+            ctx.closePath()
+            ctx.stroke()
+        }
+
+
+        //Most of the code for the cursor location is below. IMPORTANT: You also need to have the additional <p id="coordinateValues"> tag in your html at the top.
+        let xCoord = 0
+        let yCoord = 0
+        function getCursorPosition(canvas, event) {
+            const rect = canvas.getBoundingClientRect()
+            xCoord = event.clientX - rect.left
+            yCoord = event.clientY - rect.top
+            document.getElementById("coordinateValues").innerHTML = "Coordinates - x: "+xCoord+", y: "+yCoord
+        }
+
+        canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
+    </script>
+</head>
+<body></body>
+</html>
