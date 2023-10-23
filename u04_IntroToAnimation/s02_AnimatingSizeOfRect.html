@@ -10,12 +10,25 @@
         const canvas = document.getElementById("canvas")
         const ctx = canvas.getContext("2d")
 
+        let xPos = 30
+        let yPos = 250
+
+        let width = 20
+        let height = 30
+        let widthVel = 20 // px/sec
+
         let prevTimeStamp = 0
         window.requestAnimationFrame(gameLoop)
         function gameLoop(currentTimeStamp) {
             let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
             prevTimeStamp = currentTimeStamp
             ctx.clearRect(0,0,500,500)
+
+            width = width + widthVel*timeElapsed
+
+            ctx.fillRect(xPos, yPos, width, height)
+
+
 
 
 

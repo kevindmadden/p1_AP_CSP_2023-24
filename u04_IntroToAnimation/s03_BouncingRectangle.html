@@ -10,17 +10,35 @@
         const canvas = document.getElementById("canvas")
         const ctx = canvas.getContext("2d")
 
+        let xPos = 50; //50 px
+        let yPos = 100; //100 px
+        let xVel = 200; //60px/sec
+
         let prevTimeStamp = 0
         window.requestAnimationFrame(gameLoop)
         function gameLoop(currentTimeStamp) {
             let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
             prevTimeStamp = currentTimeStamp
-            ctx.clearRect(0,0,500,500)
+            ctx.fillStyle = "white"
+            ctx.fillRect(0,0,500,500)
+
+            console.log(xPos)
+            xPos = xPos + xVel*timeElapsed //timeElapsed will always be right around 1/60th px/sec
+
+            /*
+            > (greater than)
+            >= (greater than or equal to)
+            < (less than)
+            <= (less than or equal to)
+            === (equal)
+             */
+            if(xPos > 500){
+                xVel = xVel*-1
+            }
 
 
-
-
-
+            ctx.fillStyle = "black"
+            ctx.fillRect(xPos, yPos, 50, 20)
 
 
 
