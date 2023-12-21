@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flappy Bird</title>
+</head>
+<body> <canvas id="canvas" width="480px" height="640px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+<p id="coordinateValues">Coordinates - x: 0, y: 0</p>
+<button>Reset high score</button>
+<script>
+    //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+    const canvas = document.getElementById("canvas")
+    const ctx = canvas.getContext("2d")
+
+    let bird = {
+        xPos: 130,
+        yPos: 250,
+        width: 50,
+        height: 30,
+        xVel: 0,
+        yVel: 0,
+        acceleration: 0,
+        fillStyle: 'black'
+    }
+
+    let pipe = {
+        xPos: 480,
+        yPos: 0,
+        width: 20,
+        height: canvas.height,
+        xVel: -3,
+        fillStyle: 'green'
+    }
+
+    let pipe2 = structuredClone(pipe)
+    pipe2.xPos = pipe.xPos
+    pipe2.xPos += 250
+
+    let gap = {
+        xPos: 500,
+        yPos: 250,
+        width: 20,
+        height: 150,
+    }
+
+    let gap2 = structuredClone(gap)
+    gap2.yPos = 100
+
+    let gravityAcceleration = 700
+
+
+    let previousFrame = {
+        wasUpPressed: false,
+    }
+
+    let score = 0
+    let highScore = localStorage.getItem('highScore') || 0
+
+    function onButtonClick() {
+        highScore = 0
+        localStorage.setItem('highScore', 0)
+    }
+
+    const button = document.querySelector('button')
+    button.addEventListener('click', onButtonClick)
+
+    let gameOver = false
+    function gameEnd() {
+        gameOver = true
+        bird.fillStyle = "rgba(0, 0, 0, 0.5)"
+        bird.acceleration = 0
+        bird.yVel = 0
+        pipe.xVel = 0
+        pipe2.xVel = 0
+        gravityAcceleration = 0
+    }
+
+
+
+    let prevTimeStamp = 0
+    window.requestAnimationFrame(gameLoop)
+    function gameLoop(currentTimeStamp) {
+        let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
+        prevTimeStamp = currentTimeStamp
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+
+        birdMove()
+        bird.yVel = bird.yVel+bird.acceleration*timeElapsed
+        bird.yPos = bird.yPos + bird.yVel*timeElapsed
+
+        limitBirdRange()
+
+        updatePipePos()
+
+        drawPipes()
+
+        makeGap()
+
+        drawBird()
+
+        updateScore()
+
+        pipesCollide()
+
+
+        //drawing the score
+        ctx.font = "40px Arial"
+        ctx.fillStyle = 'black'
+        ctx.fillText(score, canvas.width/3, 40)
+        ctx.fillText(highScore, 2 * canvas.width/3, 40)
+
+        //displaying the Game Over screen
+        if (gameOver) {
+            ctx.fillStyle = '200 Arial'
+            ctx.fillText('Game Over', 125, canvas.height/2)
+        }
+
+        console.log(bird.xPos)
+
+        window.requestAnimationFrame(gameLoop)
+    }
+
+    function drawCircle(circle){
+        ctx.beginPath()
+        ctx.arc(circle.xPos, circle.yPos, circle.radius, 0, Math.PI*2)
+        ctx.fill()
+        ctx.closePath()
+    }
+
+    function isPointInCircle(xPoint, yPoint, circle){
+        return Math.sqrt(Math.pow(circle.xPos - xPoint, 2) + Math.pow(circle.yPos - yPoint, 2)) < circle.radius
+    }
+
+    function isCircleInCircle(circle1, circle2){
+        let distanceBetweenCircles = Math.sqrt(Math.pow(circle1.xPos - circle2.xPos, 2 ) + Math.pow(circle1.yPos - circle2.yPos, 2))
+        return distanceBetweenCircles <= circle1.radius + circle2.radius
+    }
+    function isRectangleInRectangle(box1, box2){
+        return box1.yPos + box1.height > box2.yPos && box1.xPos < box2.xPos + box2.width && box1.xPos + box1.width > box2.xPos && box1.yPos < box2.yPos + box2.height;
+    }
+
+    function birdMove() {
+        //making the bird move
+        if (!gameOver) {
+            if(!previousFrame.wasUpPressed && kbInput.up.isPressed){
+                bird.yVel = 0
+                bird.acceleration = -20000
+            }else{
+                bird.acceleration = gravityAcceleration
+            }
+        }
+    }
+
+    function limitBirdRange() {
+        //limiting bird range
+        if (bird.yPos + bird.height > canvas.height) {
+            bird.yVel = 0
+            bird.yPos = canvas.height - bird.height
+            gameEnd()
+        }
+
+        if (bird.yPos < 0) {
+            bird.yPos = 0
+        }
+    }
+
+    function updatePipePos() {
+        //updating the pipe position
+        pipe.xPos += pipe.xVel
+        pipe2.xPos += pipe2.xVel
+
+        gap.xPos += pipe.xVel
+        gap2.xPos += pipe2.xVel
+    }
+
+    function drawPipes() {
+        //drawing the pipes
+        ctx.fillStyle = pipe.fillStyle
+        ctx.fillRect(pipe.xPos, pipe.yPos, pipe.width, pipe.height)
+        ctx.fillStyle = pipe2.fillStyle
+        ctx.fillRect(pipe2.xPos, pipe2.yPos, pipe2.width, pipe2.height)
+
+        if (pipe.xPos + pipe.width < 0) {
+            pipe.xPos = 480
+            gap.yPos = 480
+            gap.yPos = Math.floor(Math.random()*500)
+        }
+
+        if (pipe2.xPos + pipe2.width < 0) {
+            pipe2.xPos = 480
+            gap2.xPos = 480
+            gap2.yPos = Math.floor(Math.random()*500)
+        }
+    }
+
+    function makeGap() {
+        //making the gap
+        ctx.clearRect(pipe.xPos, gap.yPos, pipe.width, gap.height)
+        ctx.clearRect(pipe2.xPos, gap2.yPos, pipe2.width, gap2.height)
+
+        //updating gap position
+        if (pipe.xPos !== gap.xPos) {
+            gap.xPos = pipe.xPos
+        }
+
+        if (pipe2.xPos !== gap2.xPos) {
+            gap2.xPos = pipe2.xPos
+        }
+    }
+
+    function drawBird() {
+        //drawing the bird
+        ctx.fillStyle = bird.fillStyle
+        ctx.fillRect(bird.xPos, bird.yPos, bird.width, bird.height)
+        previousFrame.wasUpPressed = kbInput.up.isPressed
+    }
+
+    function updateScore() {
+        //updating the Score
+        if(pipe2.xPos===280){
+            console.log("here"+bird.xPos+bird.width")
+        }
+        if (bird.xPos + bird.width === pipe.xPos || bird.xPos + bird.width === pipe2.xPos) {
+            score += 1
+            console.log('ran')
+        }
+
+        //updating the high score
+        if (score > highScore) {
+            localStorage.setItem('highScore', score)
+            highScore = score
+        }
+    }
+
+    function pipesCollide() {
+        //pipe collision
+        let pipeTop = {
+            xPos: pipe.xPos,
+            yPos: pipe.yPos,
+            width: pipe.width,
+            height: gap.yPos,
+        }
+
+        let pipeBottom = {
+            xPos: pipe.xPos,
+            yPos: gap.yPos + gap.height,
+            width: pipe.width,
+            height: 500 - (gap.yPos + gap.height)
+        }
+
+        let pipeTop2 = {
+            xPos: pipe2.xPos,
+            yPos: pipe2.yPos,
+            width: pipe2.width,
+            height: gap2.yPos,
+        }
+
+        let pipeBottom2 = {
+            xPos: pipe2.xPos,
+            yPos: gap2.yPos + gap2.height,
+            width: pipe2.width,
+            height: 500 - (gap2.yPos + gap2.height)
+        }
+
+        if (isRectangleInRectangle(bird, pipeTop) || isRectangleInRectangle(bird, pipeBottom)) {
+            gameEnd()
+        }
+
+        if (isRectangleInRectangle(bird, pipeTop2) || isRectangleInRectangle(bird, pipeBottom2)){
+            gameEnd()
+        }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Keyboard Input
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    canvas.addEventListener('keydown', keyHandler)
+    canvas.addEventListener('keyup', keyHandler)
+
+    let kbInput = {
+        left : {
+            value : "ArrowLeft",
+            isPressed: false,
+        },
+        right : {
+            value : "ArrowRight",
+            isPressed: false,
+        },
+        down : {
+            value : "ArrowDown",
+            isPressed: false,
+        },
+        up : {
+            value : "ArrowUp",
+            isPressed: false,
+        },
+        space : {
+            value : " ",
+            isPressed: false
+        }
+    }
+
+    function keyHandler(event) {
+        event.preventDefault() //prevents the keys that you press from performing their default action in your internet browser (for ex: when you press the down arrow key, the browser window will not scroll down)
+        let type = event.type
+        let isPressed = false
+        if(type==="keydown"){
+            isPressed = true
+        }
+        if(event.key===kbInput.left.value){
+            kbInput.left.isPressed = isPressed
+        }
+        if(event.key===kbInput.right.value){
+            kbInput.right.isPressed = isPressed
+        }
+        if(event.key===kbInput.up.value){
+            kbInput.up.isPressed = isPressed
+        }
+        if(event.key===kbInput.down.value){
+            kbInput.down.isPressed = isPressed
+        }
+        if(event.key===kbInput.space.value){
+            kbInput.space.isPressed = isPressed
+        }
+    }
+
+    //Mouse Input Stuff
+    let xCoord = 0
+    let yCoord = 0
+    function getCursorPosition(canvas, event) {
+        const rect = canvas.getBoundingClientRect()
+        xCoord = event.clientX - rect.left
+        yCoord = event.clientY - rect.top
+        document.getElementById("coordinateValues").innerHTML = "Coordinates - x: "+xCoord+", y: "+yCoord
+    }
+
+
+    canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
+
+    addEventListener('click', (event) => {});
+
+    onclick = (event) => { }
+
+</script>
+</body>
+</html>

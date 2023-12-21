@@ -10,12 +10,43 @@
         const canvas = document.getElementById("canvas")
         const ctx = canvas.getContext("2d")
 
+        let box1 = {
+            xPos: 250,
+            yPos: 250,
+            width: 20,
+            height: 100,
+        }
+
+        let box2 = {
+            xPos: 0,
+            yPos: 0,
+            width: 40,
+            height: 10,
+        }
+
+
+
         let prevTimeStamp = 0
         window.requestAnimationFrame(gameLoop)
         function gameLoop(currentTimeStamp) {
             let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
             prevTimeStamp = currentTimeStamp
             ctx.clearRect(0, 0, 500, 500)
+
+            box2.xPos = xCoord
+            box2.yPos = yCoord
+
+
+            ctx.fillRect(box1.xPos, box1.yPos, box1.width, box1.height)
+
+            ctx.fillRect(box2.xPos, box2.yPos, box2.width, box2.height)
+
+            if(isRectangleInRectangle(box1, box2)){
+                ctx.fillStyle = "red"
+            }else{
+                ctx.fillStyle = "black"
+            }
+
 
 
 
@@ -54,38 +85,21 @@
             }
         }
 
+        function isRectangleInRectangle(rect1, rect2){
+            let rect1LeftEdge = rect1.xPos
+            let rect1RightEdge = rect1.xPos + rect1.width
+            let rect1TopEdge = rect1.yPos
+            let rect1BottomEdge = rect1.yPos + rect1.height
 
-        function isRectInRect(rect1, rect2){ //https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-            if (rect1.xPos < rect2.xPos + rect2.width &&
-                rect1.xPos + rect1.width > rect2.xPos &&
-                rect1.yPos < rect2.yPos + rect2.height &&
-                rect1.yPos + rect1.height > rect2.yPos) {
+            let rect2LeftEdge = rect2.xPos
+            let rect2RightEdge = rect2.xPos + rect2.width
+            let rect2TopEdge = rect2.yPos
+            let rect2BottomEdge = rect2.yPos + rect2.height
+            if( /* Write if-statement so that it works*/ ){
                 return true
             }else{
                 return false
             }
-        }
-
-        function didRectangleCircleCollide(rect, circle){ //https://stackoverflow.com/questions/21089959/detecting-collision-of-rectangle-with-circle
-            let rect_x = rect.xPos
-            let rect_y = rect.yPos
-            let rect_w = rect.width
-            let rect_h = rect.height
-            let circle_x = circle.xPos
-            let circle_y = circle.yPos
-            let circle_r = circle.radius
-            let distX = Math.abs(circle_x - rect_x-rect_w/2);
-            let distY = Math.abs(circle_y - rect_y-rect_h/2);
-
-            if (distX > (rect_w/2 + circle_r)) { return false; }
-            if (distY > (rect_h/2 + circle_r)) { return false; }
-
-            if (distX <= (rect_w/2)) { return true; }
-            if (distY <= (rect_h/2)) { return true; }
-
-            let dx=distX-rect_w/2;
-            let dy=distY-rect_h/2;
-            return (dx*dx+dy*dy<=(circle_r*circle_r));
         }
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

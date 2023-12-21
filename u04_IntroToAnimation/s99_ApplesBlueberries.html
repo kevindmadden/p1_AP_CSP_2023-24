@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <canvas id="canvas" width="500px" height="500px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+    <p id="coordinateValues">Coordinates - x: 0, y: 0</p>
+    <script>
+        //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+        const canvas = document.getElementById("canvas")
+        const ctx = canvas.getContext("2d")
+
+        let blueberry = {
+            xPos: 250,
+            yPos: 200,
+            radius: 15,
+            xVel: 50,
+        }
+
+        let apple = {
+            xPos: 100,
+            yPos: 400,
+            radius: 20,
+            xVel: 100,
+        }
+
+
+        let prevTimeStamp = 0
+        window.requestAnimationFrame(gameLoop)
+        function gameLoop(currentTimeStamp) {
+            let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
+            prevTimeStamp = currentTimeStamp
+            ctx.clearRect(0, 0, 500, 500)
+
+            blueberry.xPos = blueberry.xPos + blueberry.xVel*timeElapsed
+
+            if( isPointInCircle(xCoord, yCoord, blueberry) === true){
+                ctx.fillStyle="blue"
+            }else{
+                ctx.fillStyle="black"
+            }
+            drawCircle(blueberry)
+
+            ctx.fillStyle = "black"
+            drawCircle(apple)
+
+
+
+
+
+            window.requestAnimationFrame(gameLoop)
+        }
+
+
+
+
+        function drawCircle(circle){
+            ctx.beginPath()
+            ctx.arc(circle.xPos, circle.yPos, circle.radius, 0, 2*Math.PI)
+            ctx.closePath()
+            ctx.fill()
+        }
+
+        function isPointInCircle(xPoint, yPoint, circle){
+            let distance = Math.sqrt( Math.pow(xPoint-circle.xPos, 2) + Math.pow(yPoint-circle.yPos, 2) )
+            if(distance < circle.radius){
+                return true
+            }else{
+                return false
+            }
+        }
+
+        //Mouse Input Stuff
+        let xCoord = 0
+        let yCoord = 0
+        function getCursorPosition(canvas, event) {
+            const rect = canvas.getBoundingClientRect()
+            xCoord = event.clientX - rect.left
+            yCoord = event.clientY - rect.top
+            document.getElementById("coordinateValues").innerHTML = "Coordinates - x: "+xCoord+", y: "+yCoord
+            console.log(event.clientX)
+        }
+
+        canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
+
+        addEventListener('click', (event) => {});
+
+        onclick = (event) => { }
+
+    </script>
+</head>
+<body></body>
+</html>
