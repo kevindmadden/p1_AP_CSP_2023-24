@@ -148,7 +148,10 @@
         canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
 
 
-        //addEventListener('click', (event) => {});
+        function mouseBeingPressed(){
+            console.log(xCoord+", "+yCoord)
+        }
+        addEventListener('mousedown', mouseBeingPressed);
 
         onclick = (event) => { console.log("clicking") }
 

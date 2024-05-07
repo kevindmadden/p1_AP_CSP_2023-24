@@ -11,10 +11,22 @@
   fruits.push("orange")
   fruits.push("pear")
 
+  // [apple, banana, orange, pear]
+  //      0       1       2     3
+  //      1       2       3     4
+
   console.log(fruits[0]) //logs: apple
   console.log(fruits[1]) //logs: banana
   console.log(fruits[2]) //logs: orange
   console.log(fruits[3]) //logs: orange
+
+  INSERT(fruits, 3, "grapefruit")
+  // [apple, banana, "grapefruit", orange, pear]
+  //      1       2              3     4     5
+  REMOVE(fruits, 2)
+  // [apple, "grapefruit", orange, pear]
+  //      1       2              3     4
+
 
   for(let fruit of fruits){
       console.log(fruit)

@@ -2,80 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Flappy Bird</title>
+    <title>Dino Game</title>
 </head>
-<body> <canvas id="canvas" width="480px" height="640px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+<body>
+<canvas id="canvas" width="700px" height="300px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
 <p id="coordinateValues">Coordinates - x: 0, y: 0</p>
-<button>Reset high score</button>
 <script>
     //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
     const canvas = document.getElementById("canvas")
     const ctx = canvas.getContext("2d")
 
-    let bird = {
-        xPos: 130,
-        yPos: 250,
-        width: 50,
-        height: 30,
+    cacti = []
+
+    let player = {
+        xPos: 40,
+        yPos: canvas.height - 60,
+        width: 35,
+        height: 60,
         xVel: 0,
         yVel: 0,
         acceleration: 0,
-        fillStyle: 'black'
     }
+    let gravityAcceleration = 900
 
-    let pipe = {
-        xPos: 480,
-        yPos: 0,
-        width: 20,
-        height: canvas.height,
-        xVel: -3,
-        fillStyle: 'green'
-    }
-
-    let pipe2 = structuredClone(pipe)
-    pipe2.xPos = pipe.xPos
-    pipe2.xPos += 250
-
-    let gap = {
-        xPos: 500,
-        yPos: 250,
-        width: 20,
-        height: 150,
-    }
-
-    let gap2 = structuredClone(gap)
-    gap2.yPos = 100
-
-    let gravityAcceleration = 700
+    let jumpPossible = false
 
 
     let previousFrame = {
         wasUpPressed: false,
     }
 
-    let score = 0
-    let highScore = localStorage.getItem('highScore') || 0
+    let firstRun = true
 
-    function onButtonClick() {
-        highScore = 0
-        localStorage.setItem('highScore', 0)
-    }
-
-    const button = document.querySelector('button')
-    button.addEventListener('click', onButtonClick)
-
-    let gameOver = false
-    function gameEnd() {
-        gameOver = true
-        bird.fillStyle = "rgba(0, 0, 0, 0.5)"
-        bird.acceleration = 0
-        bird.yVel = 0
-        pipe.xVel = 0
-        pipe2.xVel = 0
-        gravityAcceleration = 0
-    }
-
-
+    let spawnCactus = false
 
     let prevTimeStamp = 0
     window.requestAnimationFrame(gameLoop)
@@ -84,43 +43,108 @@
         prevTimeStamp = currentTimeStamp
         ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-
-        birdMove()
-        bird.yVel = bird.yVel+bird.acceleration*timeElapsed
-        bird.yPos = bird.yPos + bird.yVel*timeElapsed
-
-        limitBirdRange()
-
-        updatePipePos()
-
-        drawPipes()
-
-        makeGap()
-
-        drawBird()
-
-        updateScore()
-
-        pipesCollide()
-
-
-        //drawing the score
-        ctx.font = "40px Arial"
-        ctx.fillStyle = 'black'
-        ctx.fillText(score, canvas.width/3, 40)
-        ctx.fillText(highScore, 2 * canvas.width/3, 40)
-
-        //displaying the Game Over screen
-        if (gameOver) {
-            ctx.fillStyle = '200 Arial'
-            ctx.fillText('Game Over', 125, canvas.height/2)
+        if (player.yPos === canvas.height-60) {
+            jumpPossible = true
+        }
+        else {
+            jumpPossible = false
         }
 
-        console.log(bird.xPos)
+        if(previousFrame.wasUpPressed && kbInput.up.isPressed){
+            if(jumpPossible){
+                player.yVel = 0
+                player.acceleration = -30000
+            }
+            else {
+                player.acceleration = gravityAcceleration
+            }
+        }
+        else{
+            player.acceleration = gravityAcceleration
+        }
 
+        if(firstRun === true) {
+            cacti.push(randomCactusFactory(1))
+            firstRun = false
+        }
+
+        for (let cactus of cacti) {
+            if(firstRun === false && cactus.xPos < player.xPos){
+                spawnCactus = true
+            }
+            else{
+                spawnCactus = false
+            }
+        }
+
+        if (spawnCactus === true) {
+            cacti.push(randomCactusFactory(Math.floor(Math.random()*3)))
+        }
+
+        for (let cactus of cacti) {
+            console.log(cactus)
+            cactus.xPos -= cactus.xVel
+            ctx.fillRect(cactus.xPos, cactus.yPos, cactus.width, cactus.height)
+        }
+
+
+
+
+        player.yVel = player.yVel+player.acceleration*timeElapsed
+        player.yPos = player.yPos + player.yVel*timeElapsed
+
+        if(player.yPos+player.height > canvas.height){
+            player.yPos = canvas.height-player.height
+        }
+
+
+
+        ctx.fillRect(player.xPos, player.yPos, player.width, player.height)
+
+        previousFrame.wasUpPressed = kbInput.up.isPressed
         window.requestAnimationFrame(gameLoop)
     }
 
+
+    function randomCactusFactory(type) {
+        let cactus = {
+            xPos: canvas.height + 10,
+            yPos: 0,
+            width: 0,
+            height: 0,
+            xVel: 0,
+        }
+        if (type === 1) { //tall single
+            cactus = {
+                xPos: canvas.width + 10,
+                yPos: canvas.height - 70,
+                width: 30,
+                height: 70,
+                xVel: 10,
+            }
+            return cactus
+        }
+        if (type === 2) { //short single
+            cactus = {
+                xPos: canvas.width + 10,
+                yPos: canvas.height - 50,
+                width: 30,
+                height: 50,
+                xVel: 10,
+            }
+            return cactus
+        }
+        if (type === 3) { //tall double
+            cactus = {
+                xPos: canvas.width + 10,
+                yPos: canvas.height - 70,
+                width: 60,
+                height: 70,
+                xVel: 10,
+            }
+            return cactus
+        }
+    }
     function drawCircle(circle){
         ctx.beginPath()
         ctx.arc(circle.xPos, circle.yPos, circle.radius, 0, Math.PI*2)
@@ -129,146 +153,19 @@
     }
 
     function isPointInCircle(xPoint, yPoint, circle){
-        return Math.sqrt(Math.pow(circle.xPos - xPoint, 2) + Math.pow(circle.yPos - yPoint, 2)) < circle.radius
+        if(Math.sqrt(  Math.pow(circle.xPos - xPoint, 2)  + Math.pow(circle.yPos - yPoint, 2) )  < circle.radius){
+            return true
+        }else{
+            return false
+        }
     }
 
     function isCircleInCircle(circle1, circle2){
         let distanceBetweenCircles = Math.sqrt(Math.pow(circle1.xPos - circle2.xPos, 2 ) + Math.pow(circle1.yPos - circle2.yPos, 2))
-        return distanceBetweenCircles <= circle1.radius + circle2.radius
-    }
-    function isRectangleInRectangle(box1, box2){
-        return box1.yPos + box1.height > box2.yPos && box1.xPos < box2.xPos + box2.width && box1.xPos + box1.width > box2.xPos && box1.yPos < box2.yPos + box2.height;
-    }
-
-    function birdMove() {
-        //making the bird move
-        if (!gameOver) {
-            if(!previousFrame.wasUpPressed && kbInput.up.isPressed){
-                bird.yVel = 0
-                bird.acceleration = -20000
-            }else{
-                bird.acceleration = gravityAcceleration
-            }
-        }
-    }
-
-    function limitBirdRange() {
-        //limiting bird range
-        if (bird.yPos + bird.height > canvas.height) {
-            bird.yVel = 0
-            bird.yPos = canvas.height - bird.height
-            gameEnd()
-        }
-
-        if (bird.yPos < 0) {
-            bird.yPos = 0
-        }
-    }
-
-    function updatePipePos() {
-        //updating the pipe position
-        pipe.xPos += pipe.xVel
-        pipe2.xPos += pipe2.xVel
-
-        gap.xPos += pipe.xVel
-        gap2.xPos += pipe2.xVel
-    }
-
-    function drawPipes() {
-        //drawing the pipes
-        ctx.fillStyle = pipe.fillStyle
-        ctx.fillRect(pipe.xPos, pipe.yPos, pipe.width, pipe.height)
-        ctx.fillStyle = pipe2.fillStyle
-        ctx.fillRect(pipe2.xPos, pipe2.yPos, pipe2.width, pipe2.height)
-
-        if (pipe.xPos + pipe.width < 0) {
-            pipe.xPos = 480
-            gap.yPos = 480
-            gap.yPos = Math.floor(Math.random()*500)
-        }
-
-        if (pipe2.xPos + pipe2.width < 0) {
-            pipe2.xPos = 480
-            gap2.xPos = 480
-            gap2.yPos = Math.floor(Math.random()*500)
-        }
-    }
-
-    function makeGap() {
-        //making the gap
-        ctx.clearRect(pipe.xPos, gap.yPos, pipe.width, gap.height)
-        ctx.clearRect(pipe2.xPos, gap2.yPos, pipe2.width, gap2.height)
-
-        //updating gap position
-        if (pipe.xPos !== gap.xPos) {
-            gap.xPos = pipe.xPos
-        }
-
-        if (pipe2.xPos !== gap2.xPos) {
-            gap2.xPos = pipe2.xPos
-        }
-    }
-
-    function drawBird() {
-        //drawing the bird
-        ctx.fillStyle = bird.fillStyle
-        ctx.fillRect(bird.xPos, bird.yPos, bird.width, bird.height)
-        previousFrame.wasUpPressed = kbInput.up.isPressed
-    }
-
-    function updateScore() {
-        //updating the Score
-        if(pipe2.xPos===280){
-            console.log("here"+bird.xPos+bird.width")
-        }
-        if (bird.xPos + bird.width === pipe.xPos || bird.xPos + bird.width === pipe2.xPos) {
-            score += 1
-            console.log('ran')
-        }
-
-        //updating the high score
-        if (score > highScore) {
-            localStorage.setItem('highScore', score)
-            highScore = score
-        }
-    }
-
-    function pipesCollide() {
-        //pipe collision
-        let pipeTop = {
-            xPos: pipe.xPos,
-            yPos: pipe.yPos,
-            width: pipe.width,
-            height: gap.yPos,
-        }
-
-        let pipeBottom = {
-            xPos: pipe.xPos,
-            yPos: gap.yPos + gap.height,
-            width: pipe.width,
-            height: 500 - (gap.yPos + gap.height)
-        }
-
-        let pipeTop2 = {
-            xPos: pipe2.xPos,
-            yPos: pipe2.yPos,
-            width: pipe2.width,
-            height: gap2.yPos,
-        }
-
-        let pipeBottom2 = {
-            xPos: pipe2.xPos,
-            yPos: gap2.yPos + gap2.height,
-            width: pipe2.width,
-            height: 500 - (gap2.yPos + gap2.height)
-        }
-
-        if (isRectangleInRectangle(bird, pipeTop) || isRectangleInRectangle(bird, pipeBottom)) {
-            gameEnd()
-        }
-
-        if (isRectangleInRectangle(bird, pipeTop2) || isRectangleInRectangle(bird, pipeBottom2)){
-            gameEnd()
+        if(distanceBetweenCircles > circle1.radius + circle2.radius){
+            return false
+        }else{
+            return true
         }
     }
 
@@ -296,10 +193,6 @@
             value : "ArrowUp",
             isPressed: false,
         },
-        space : {
-            value : " ",
-            isPressed: false
-        }
     }
 
     function keyHandler(event) {
@@ -321,9 +214,6 @@
         if(event.key===kbInput.down.value){
             kbInput.down.isPressed = isPressed
         }
-        if(event.key===kbInput.space.value){
-            kbInput.space.isPressed = isPressed
-        }
     }
 
     //Mouse Input Stuff
@@ -335,7 +225,6 @@
         yCoord = event.clientY - rect.top
         document.getElementById("coordinateValues").innerHTML = "Coordinates - x: "+xCoord+", y: "+yCoord
     }
-
 
     canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
 

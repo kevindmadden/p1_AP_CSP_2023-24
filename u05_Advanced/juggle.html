@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <canvas id="canvas" width="500px" height="500px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+  <p id="coordinateValues">Coordinates - x: 0, y: 0</p>
+  <script>
+    //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+    const canvas = document.getElementById("canvas")
+    const ctx = canvas.getContext("2d")
+
+
+    let target = {
+      xPos: (Math.random() * (500 - 20 - 50)) + 50,
+      yPos: 250,
+      width: 20,
+      height: 20,
+      acceleration: 0,
+    }
+
+    let superTarget = {
+      xPos: (Math.random() * (500 - 10 - 50)) + 50,
+      yPos: 100,
+      width: 10,
+      height: 10,
+      acceleration: 0,
+    }
+
+
+    let size = {
+      xPos: 260,
+      yPos: 335,
+      width: 12,
+      height: 12,
+      xVel: 10,
+      yVel: 20,
+      acceleration: 0,
+    }
+
+
+    let player = {
+      xPos: 250,
+      yPos: 450,
+      width: 40,
+      height: 40,
+      xVel: 0,
+      yVel: 0,
+      acceleration: 0,
+      isAlive: true,
+    }
+
+
+
+    let winAmount = 50
+
+
+    let gravityAcceleration = 500
+    let score = 0
+    let gameOver = false
+    let lives = 3
+
+
+
+
+
+    let prevFrame = {
+      wasSpacePressed: false,
+      wasUpPressed: false,
+    }
+
+    let onClick = false
+    let prevTimeStamp = 0
+    window.requestAnimationFrame(gameLoop)
+    function gameLoop(currentTimeStamp) {
+      let timeElapsed = (currentTimeStamp - prevTimeStamp) / 1000
+      prevTimeStamp = currentTimeStamp
+      ctx.clearRect(0, 0, 500, 500)
+
+
+
+
+
+
+      size.xPos = size.xPos + size.xVel * timeElapsed
+      size.yPos = size.yPos + size.yVel * timeElapsed
+      player.xPos = player.xPos + player.xVel * timeElapsed
+      player.yvel = player.yVel + player.yVel * timeElapsed
+
+
+      ctx.fillStyle = `#ff0000`
+      drawRect(size)
+      ctx.fillStyle = `#000000`
+      drawRect(player)
+      ctx.fillStyle = `#1d00cc`
+      drawRect(target)
+      ctx.fillStyle = `#ccb200`
+      drawRect(superTarget)
+
+
+      ctx.font = "50px serif";
+      ctx.fillText(`Score: ` + score, 10, 50);
+      ctx.fillText(`Lives:` + ` ` + lives, 325, 50);
+
+      if(kbInput.up.isPressed && !prevFrame.wasUpPressed && !gameOver){
+        player.yVel = 300
+        player.acceleration = -500
+
+      }else{
+        player.acceleration = gravityAcceleration * timeElapsed
+      }
+
+
+      player.yVel = player.yVel + player.acceleration
+      player.yPos = player.yPos + player.yVel * timeElapsed
+
+      if(player.yPos+player.height > 500){
+        player.yPos = 500-player.height
+        player.yVel = player.yVel*.9
+      }
+
+      if(player.xPos+player.width >= 500){
+        player.xPos= 500 - player.width
+      }
+
+      if(player.xPos <= 0){
+        player.xPos= 0
+      }
+
+      if(size.xPos <= 0 || size.xPos + size.width >= 500){
+        size.xVel *= -1
+      }
+
+      if(isRectangleInRectangle(target,player)){
+        score += 3
+        target.xPos = (Math.random() * (500 - target.width - 50)) + 50
+        target.yPos = (Math.random() * (500 - target.height - 50)) + 100
+      }
+
+      if(isRectangleInRectangle(superTarget,player)){
+        score += 7
+        superTarget.xPos = (Math.random() * (500 - superTarget.width - 50)) + 50
+        superTarget.yPos = (Math.random() * (100 - superTarget.height))
+      }
+
+
+      if(isRectangleInRectangle(size, player) && !gameOver && (size.yPos + size.height <= player.yPos + 15 || (size.yPos + size.height <= player.yPos + player.height - 15 && Math.sign(player.yVel) === 1))){
+        size.yVel = -(Math.random()*100+300)
+        size.yPos = player.yPos - size.height
+        size.xVel = (Math.random() - .5) * 350
+        score += 1
+        size.acceleration = 100 + (score * 2.5)
+
+      }else{
+        size.acceleration = gravityAcceleration * timeElapsed
+      }
+
+      if(player.yPos + player.height >= 500){
+        player.yVel = 0
+      }
+
+      if(size.yPos + size.height >= 500 - size.height && lives >= 1){
+        size.yVel = 0
+        size.yPos = 100
+        size.xPos = 250
+        player.xPos = 250 - player.width
+        player.yPos = 500 - player.height
+        size.xVel = (Math.random() - .5) * 200
+        lives -= 1
+      }
+
+      if(lives === 0){
+        size.yPos = 1000
+        gameOver = true
+      }
+      if(lives > 0 && score >= winAmount){
+        gameOver = true
+      }
+
+      size.yVel = size.yVel + size.acceleration
+      size.yPos = size.yPos + size.yVel * timeElapsed
+
+
+      if(gameOver === true){
+        ctx.fillStyle = `#ffffff`
+        ctx.fillRect(0,0, 500,500)
+        ctx.fillStyle = `#000000`
+        ctx.textAlign = `center`
+        ctx.fillText(`Game Over!`, 250, 250)
+        ctx.fillText(`Your Score: ` + score, 250, 300)
+
+      }
+      if(gameOver === true && score >= winAmount){
+        ctx.fillStyle = `#ffffff`
+        ctx.fillRect(0,0, 500,500)
+        ctx.fillStyle = `#000000`
+        ctx.textAlign = `center`
+        ctx.fillText(`You Win!`, 250, 250)
+        ctx.fillText(`Your Score: ` + score, 250, 300)
+
+      }
+
+
+
+
+      prevFrame.wasSpacePressed = kbInput.space.isPressed
+      prevFrame.wasUpPressed = kbInput.up.isPressed
+
+
+      playerMove(gameOver)
+      window.requestAnimationFrame(gameLoop)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function didRectangleCircleCollide(rect, circle){ //https://stackoverflow.com/questions/21089959/detecting-collision-of-rectangle-with-circle
+      let rect_x = rect.xPos
+      let rect_y = rect.yPos
+      let rect_w = rect.width
+      let rect_h = rect.height
+      let circle_x = circle.xPos
+      let circle_y = circle.yPos
+      let circle_r = circle.radius
+      let distX = Math.abs(circle_x - rect_x-rect_w/2);
+      let distY = Math.abs(circle_y - rect_y-rect_h/2);
+
+      if (distX > (rect_w/2 + circle_r)) { return false; }
+      if (distY > (rect_h/2 + circle_r)) { return false; }
+
+      if (distX <= (rect_w/2)) { return true; }
+      if (distY <= (rect_h/2)) { return true; }
+
+      let dx=distX-rect_w/2;
+      let dy=distY-rect_h/2;
+      return (dx*dx+dy*dy<=(circle_r*circle_r));
+    }
+
+
+
+    function playerMove(gameOver) {
+      if (!gameOver) {
+        if (!kbInput.right.isPressed && !kbInput.left.isPressed && !kbInput.up.isPressed) {
+          player.xVel = 0
+        }
+        if (kbInput.right.isPressed) {
+          if(lives === 3){
+            player.xVel = 200
+          }
+          if(lives === 2){
+            player.xVel = 225
+          }
+          if(lives === 1){
+            player.xVel = 250
+          }
+        }
+        if (kbInput.left.isPressed) {
+          if(lives === 3){
+            player.xVel = -200
+          }
+          if(lives === 2){
+            player.xVel = -225
+          }
+          if(lives === 1){
+            player.xVel = -250
+          }
+        }
+        if (kbInput.right.isPressed && kbInput.left.isPressed && kbInput.up.isPressed) {
+          player.xVel = 0
+        }
+        if(kbInput.down.isPressed){
+          player.yVel = 1000
+        }
+      }else{
+        player.xVel = 0
+        player.yVel = 0
+      }
+    }
+
+
+    function isCircleInCircle(circle1, circle2){
+      let distanceBetweenCircles = Math.sqrt(Math.pow(circle1.xPos - circle2.xPos, 2 ) + Math.pow(circle1.yPos - circle2.yPos, 2))
+      if(distanceBetweenCircles > circle1.radius + circle2.radius){
+        return false
+      }else{
+        return true
+      }
+    }
+
+
+    function drawCircle(circle){
+      ctx.beginPath()
+      ctx.arc(circle.xPos, circle.yPos, circle.radius, 0, Math.PI*2)
+      ctx.fill()
+      ctx.closePath()
+    }
+
+
+    function drawRect(rect){
+      ctx.beginPath()
+      ctx.fillRect(rect.xPos,rect.yPos,rect.width,rect.height)
+      ctx.fillStyle = "black"
+      ctx.fill()
+      ctx.closePath()
+    }
+
+
+
+
+
+
+    function isRectangleInRectangle(rect1, rect2){
+      let rect1LeftEdge = rect1.xPos
+      let rect1RightEdge = rect1.xPos + rect1.width
+      let rect1TopEdge = rect1.yPos
+      let rect1BottomEdge = rect1.yPos + rect1.height
+      let rect2LeftEdge = rect2.xPos
+      let rect2RightEdge = rect2.xPos + rect2.width
+      let rect2TopEdge = rect2.yPos
+      let rect2BottomEdge = rect2.yPos + rect2.height
+
+      if(rect1LeftEdge < rect2RightEdge && rect1RightEdge > rect2LeftEdge && rect1TopEdge < rect2BottomEdge && rect1BottomEdge > rect2TopEdge){
+        return true
+      }else{
+        return false
+      }
+    }
+
+
+
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Keyboard Input
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    canvas.addEventListener('keydown', keyHandler)
+    canvas.addEventListener('keyup', keyHandler)
+
+    let kbInput = {
+      left : {
+        value : "ArrowLeft",
+        isPressed: false,
+      },
+      right : {
+        value : "ArrowRight",
+        isPressed: false,
+      },
+      down : {
+        value : "ArrowDown",
+        isPressed: false,
+      },
+      up : {
+        value : "ArrowUp",
+        isPressed: false,
+      },
+      space : {
+        value : " ",
+        isPressed: false,
+      }
+    }
+
+    function keyHandler(event) {
+      event.preventDefault() //prevents the keys that you press from performing their default action in your internet browser (for ex: when you press the down arrow key, the browser window will not scroll down)
+      let type = event.type
+      let isPressed = false
+      if(type==="keydown"){
+        isPressed = true
+      }
+      if(event.key===kbInput.left.value){
+        kbInput.left.isPressed = isPressed
+      }
+      if(event.key===kbInput.right.value){
+        kbInput.right.isPressed = isPressed
+      }
+      if(event.key===kbInput.up.value){
+        kbInput.up.isPressed = isPressed
+      }
+      if(event.key===kbInput.down.value){
+        kbInput.down.isPressed = isPressed
+      }
+      if(event.key===kbInput.space.value){
+        kbInput.space.isPressed = isPressed
+      }
+    }
+
+    //Mouse Input Stuff
+    let xCoord = 0
+    let yCoord = 0
+    function getCursorPosition(canvas, event) {
+      const rect = canvas.getBoundingClientRect()
+      xCoord = event.clientX - rect.left
+      yCoord = event.clientY - rect.top
+      document.getElementById("coordinateValues").innerHTML = "Coordinates - x: "+xCoord+", y: "+yCoord
+    }
+
+    canvas.addEventListener('mousemove', function(e) { getCursorPosition(canvas, e)})
+
+    addEventListener('click', (event) => {
+      onClick = true
+    });
+
+  </script>
+</head>
+<body></body>
+</html>

@@ -10,35 +10,10 @@
     const canvas = document.getElementById("canvas")
     const ctx = canvas.getContext("2d")
 
-    // () - Parenthesis
-    // [] - Brackets
-    // {} - Braces
-    let bullets = []
+    //base 64 image converter: https://www.base64-image.de/
+    let testImage = new Image()
+    testImage.src = "data:image/png;base64,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"
 
-    function bulletFactory(x, y, r){
-        let bullet = {
-          xPos: x,
-          yPos: y,
-          radius: r,
-          color: "red",
-          xVel: 0,
-          yVel: 100,
-          isAlive: true,
-        }
-        return bullet
-    }
-
-    let player = {
-      xPos:250,
-      yPos: 250,
-      width: 20,
-      height: 30,
-      xVel: 0,
-    }
-
-    let previousFrame = {
-      wasSpacePressed: false,
-    }
 
     let prevTimeStamp = 0
     window.requestAnimationFrame(gameLoop)
@@ -47,47 +22,18 @@
       prevTimeStamp = currentTimeStamp
       ctx.clearRect(0, 0, 500, 500)
 
-      player.xPos = player.xPos + player.xVel*timeElapsed
-
-      if(!kbInput.space.isPressed && previousFrame.wasSpacePressed){
-        bullets.push( bulletFactory(player.xPos, player.yPos, 2))
-      }
-
-      for(let bullet of bullets){
-        bullet.yPos = bullet.yPos + bullet.yVel*timeElapsed
-      }
-
-      for(let bullet of bullets){
-        drawCircle(bullet)
-      }
-
-      movePlayer()
+      ctx.drawImage(testImage, 250, 250, 100, 100)
 
 
-      ctx.fillRect(player.xPos, player.yPos, player.height, player.width)
 
 
-      previousFrame.wasSpacePressed = kbInput.space.isPressed
+
+
+
+
+
+
       window.requestAnimationFrame(gameLoop)
-    }
-
-
-    function movePlayer(){
-      if(kbInput.right.isPressed && kbInput.left.isPressed){
-        player.xVel = 0
-      }
-
-      if(kbInput.left.isPressed && !kbInput.right.isPressed){
-        player.xVel = -200
-      }
-
-      if(kbInput.right.isPressed && !kbInput.left.isPressed){
-        player.xVel = 200
-      }
-
-      if(!kbInput.right.isPressed && !kbInput.left.isPressed){
-        player.xVel = 0
-      }
     }
 
     function drawCircle(circle){
@@ -172,10 +118,6 @@
         value : "ArrowUp",
         isPressed: false,
       },
-      space : {
-        value : " ",
-        isPressed: false,
-      },
     }
 
     function keyHandler(event) {
@@ -196,9 +138,6 @@
       }
       if(event.key===kbInput.down.value){
         kbInput.down.isPressed = isPressed
-      }
-      if(event.key===kbInput.space.value){
-        kbInput.space.isPressed = isPressed
       }
     }
 
