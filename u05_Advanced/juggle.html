@@ -2,14 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
-  <canvas id="canvas" width="500px" height="500px" style="border: 1px solid black;" tabindex="1" autofocus></canvas>
+  <title>Keep It Up!</title>
+  <canvas id="canvas" width="500px" height="500px" style="border: 1px solid black; margin: auto; display: block" tabindex="1" autofocus></canvas>
   <p id="coordinateValues">Coordinates - x: 0, y: 0</p>
   <script>
     //Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
     const canvas = document.getElementById("canvas")
     const ctx = canvas.getContext("2d")
 
+    let start = false
+
+    let twoPlayer = false
+
+    let prevGameScore = 0
+
+    let highScore = 0
+
+    let Endless = false
+
+    let startButton = {
+      xPos: 100,
+      yPos: 400,
+      width: 300,
+      height: 50,
+    }
+
+    let twoPlayerButton = {
+      xPos: 0,
+      yPos: 470,
+      width: 50,
+      height: 30,
+    }
+
+    let startEndlessButton = {
+      xPos: 150,
+      yPos: 460,
+      width: 200,
+      height: 50,
+    }
+
+    let startAnimation = {
+      player: {
+        xPos: 230,
+        yPos: 360,
+        width: 40,
+        height: 40,
+      },
+      size: {
+        xPos: 244,
+        yPos: 200,
+        width: 12,
+        height: 12,
+        yVel: 0,
+        xVel: 50,
+        acceleration: 100,
+      },
+    }
 
     let target = {
       xPos: (Math.random() * (500 - 20 - 50)) + 50,
@@ -33,7 +81,7 @@
       yPos: 335,
       width: 12,
       height: 12,
-      xVel: 10,
+      xVel: 0,
       yVel: 20,
       acceleration: 0,
     }
@@ -48,6 +96,16 @@
       yVel: 0,
       acceleration: 0,
       isAlive: true,
+    }
+
+    let playerTwo = {
+      xPos: 250,
+      yPos: 450,
+      width: 40,
+      height: 40,
+      xVel: 0,
+      yVel: 0,
+      acceleration: 0,
     }
 
 
@@ -67,6 +125,11 @@
     let prevFrame = {
       wasSpacePressed: false,
       wasUpPressed: false,
+      wasRPressed: false,
+      wasWPressed: false,
+      wasAPressed: false,
+      wasSPressed: false,
+      wasDPressed: false,
     }
 
     let onClick = false
@@ -77,137 +140,285 @@
       prevTimeStamp = currentTimeStamp
       ctx.clearRect(0, 0, 500, 500)
 
-
-
-
-
-
-      size.xPos = size.xPos + size.xVel * timeElapsed
-      size.yPos = size.yPos + size.yVel * timeElapsed
-      player.xPos = player.xPos + player.xVel * timeElapsed
-      player.yvel = player.yVel + player.yVel * timeElapsed
-
-
-      ctx.fillStyle = `#ff0000`
-      drawRect(size)
-      ctx.fillStyle = `#000000`
-      drawRect(player)
-      ctx.fillStyle = `#1d00cc`
-      drawRect(target)
-      ctx.fillStyle = `#ccb200`
-      drawRect(superTarget)
-
-
-      ctx.font = "50px serif";
-      ctx.fillText(`Score: ` + score, 10, 50);
-      ctx.fillText(`Lives:` + ` ` + lives, 325, 50);
-
-      if(kbInput.up.isPressed && !prevFrame.wasUpPressed && !gameOver){
-        player.yVel = 300
-        player.acceleration = -500
-
-      }else{
-        player.acceleration = gravityAcceleration * timeElapsed
-      }
-
-
-      player.yVel = player.yVel + player.acceleration
-      player.yPos = player.yPos + player.yVel * timeElapsed
-
-      if(player.yPos+player.height > 500){
-        player.yPos = 500-player.height
-        player.yVel = player.yVel*.9
-      }
-
-      if(player.xPos+player.width >= 500){
-        player.xPos= 500 - player.width
-      }
-
-      if(player.xPos <= 0){
-        player.xPos= 0
-      }
-
-      if(size.xPos <= 0 || size.xPos + size.width >= 500){
-        size.xVel *= -1
-      }
-
-      if(isRectangleInRectangle(target,player)){
-        score += 3
-        target.xPos = (Math.random() * (500 - target.width - 50)) + 50
-        target.yPos = (Math.random() * (500 - target.height - 50)) + 100
-      }
-
-      if(isRectangleInRectangle(superTarget,player)){
-        score += 7
-        superTarget.xPos = (Math.random() * (500 - superTarget.width - 50)) + 50
-        superTarget.yPos = (Math.random() * (100 - superTarget.height))
-      }
-
-
-      if(isRectangleInRectangle(size, player) && !gameOver && (size.yPos + size.height <= player.yPos + 15 || (size.yPos + size.height <= player.yPos + player.height - 15 && Math.sign(player.yVel) === 1))){
-        size.yVel = -(Math.random()*100+300)
-        size.yPos = player.yPos - size.height
-        size.xVel = (Math.random() - .5) * 350
-        score += 1
-        size.acceleration = 100 + (score * 2.5)
-
-      }else{
-        size.acceleration = gravityAcceleration * timeElapsed
-      }
-
-      if(player.yPos + player.height >= 500){
-        player.yVel = 0
-      }
-
-      if(size.yPos + size.height >= 500 - size.height && lives >= 1){
-        size.yVel = 0
-        size.yPos = 100
-        size.xPos = 250
-        player.xPos = 250 - player.width
-        player.yPos = 500 - player.height
-        size.xVel = (Math.random() - .5) * 200
-        lives -= 1
-      }
-
-      if(lives === 0){
-        size.yPos = 1000
-        gameOver = true
-      }
-      if(lives > 0 && score >= winAmount){
-        gameOver = true
-      }
-
-      size.yVel = size.yVel + size.acceleration
-      size.yPos = size.yPos + size.yVel * timeElapsed
-
-
-      if(gameOver === true){
-        ctx.fillStyle = `#ffffff`
-        ctx.fillRect(0,0, 500,500)
-        ctx.fillStyle = `#000000`
+      if(start === false) {
+        ctx.fillStyle = `#868686`
+        ctx.fillRect(0, 0, 500, 500)
         ctx.textAlign = `center`
-        ctx.fillText(`Game Over!`, 250, 250)
-        ctx.fillText(`Your Score: ` + score, 250, 300)
-
-      }
-      if(gameOver === true && score >= winAmount){
+        ctx.fillStyle = `#a4f7ff`
+        ctx.font= `50px serif`
+        ctx.fillText(`Keep It Up!`, 250, 100)
+        ctx.font= `30px serif`
+        ctx.fillText(`The goal is to keep it up`, 250, 145)
+        ctx.fillText(`and get to 50 points as fast as possible!`, 250, 180)
+        ctx.fillText(`Good Luck and Have Fun!`, 250, 215)
+        ctx.font= `25px serif`
+        ctx.fillText(`Your Latest Score:` + prevGameScore, 115, 30)
+        ctx.fillText(`Your Highest Score:` + highScore, 365, 30)
+        ctx.fillStyle = `#a4f7ff`
+        drawRect(startButton)
+        ctx.fillStyle = `#a4f7ff`
+        drawRect(startEndlessButton)
+        if(!twoPlayer){
+          ctx.fillStyle = `#ff0000`
+        }
+        if(twoPlayer){
+          ctx.fillStyle = `#3bff00`
+        }
+        drawRect(twoPlayerButton)
         ctx.fillStyle = `#ffffff`
-        ctx.fillRect(0,0, 500,500)
+        ctx.font= `45px serif`
+        ctx.fillText(`Click To Play!`, 250, 437)
+        ctx.font= `40px serif`
+        ctx.fillText(`ENDLESS?`, 250, 493)
+        ctx.fillText(`2P`, 25, 500)
+        ctx.font= `15px serif`
+        ctx.fillText(`Made By Ohm Patel`, 435, 497)
+        if((kbInput.up.isPressed && !prevFrame.wasUpPressed) || (kbInput.space.isPressed && !prevFrame.wasSpacePressed)){
+          start = true
+        }
+        onclick = function(e) {
+          if (isPointInRect(xCoord, yCoord, startButton)) {
+            start = true
+            Endless = false
+          }
+          if (isPointInRect(xCoord, yCoord, startEndlessButton)) {
+            start = true
+            Endless = true
+          }
+          if (isPointInRect(xCoord, yCoord, twoPlayerButton)) {
+            if(!twoPlayer){
+              twoPlayer = true
+            }else{
+              twoPlayer = false
+            }
+          }
+        }
+        ctx.fillStyle = `#ff0000`
+        drawRect(startAnimation.size)
         ctx.fillStyle = `#000000`
-        ctx.textAlign = `center`
-        ctx.fillText(`You Win!`, 250, 250)
-        ctx.fillText(`Your Score: ` + score, 250, 300)
+        drawRect(startAnimation.player)
 
+        startAnimation.size.yVel += startAnimation.size.acceleration
+        startAnimation.size.yPos += startAnimation.size.yVel * timeElapsed
+        startAnimation.size.xPos += startAnimation.size.xVel * timeElapsed
+        if(startAnimation.size.xPos <= 225 || startAnimation.size.xPos + startAnimation.size.width >= 275){
+          startAnimation.size.xVel *= -1
+        }
+        if(startAnimation.size.yPos <= 200){
+          startAnimation.size.yPos = 200
+          startAnimation.size.yVel *= -1
+        }
+        if(startAnimation.size.yPos + startAnimation.size.height >= startAnimation.player.yPos && isRectangleInRectangle(startAnimation.player, startAnimation.size)){
+          startAnimation.size.yPos = startAnimation.player.yPos - startAnimation.size.height
+          startAnimation.size.yVel = -900
+        }
       }
 
+      console.log(prevGameScore)
+
+      if(start === true) {
+
+        if(twoPlayer === true){
+          winAmount = 100
+        }
+
+        if(Endless === true){
+          winAmount = 999999999999999999
+        }
+
+
+        size.xPos = size.xPos + size.xVel * timeElapsed
+        size.yPos = size.yPos + size.yVel * timeElapsed
+        player.xPos = player.xPos + player.xVel * timeElapsed
+        player.yvel = player.yVel + player.yVel * timeElapsed
+
+        playerTwo.xPos = playerTwo.xPos + playerTwo.xVel * timeElapsed
+        playerTwo.yvel = playerTwo.yVel + playerTwo.yVel * timeElapsed
+
+
+        ctx.fillStyle = `#ff0000`
+        drawRect(size)
+        ctx.fillStyle = `#000000`
+        drawRect(player)
+        ctx.fillStyle = `#949494`
+        if(twoPlayer){
+          drawRect(playerTwo)
+        }
+        ctx.fillStyle = `#1d00cc`
+        drawRect(target)
+        ctx.fillStyle = `#ccb200`
+        drawRect(superTarget)
+
+
+        ctx.font = "50px serif";
+        ctx.textAlign = `left`
+        ctx.fillText(`Score: ` + score, 10, 50);
+        ctx.fillText(`Lives:` + ` ` + lives, 325, 50);
+        if(Endless){
+          ctx.font = "20px serif";
+          ctx.fillText(`Endless Mode`, 10, 70)
+        }
+
+        if (kbInput.up.isPressed && !prevFrame.wasUpPressed && !gameOver) {
+          player.yVel = 300
+          player.acceleration = -500
+
+        } else {
+          player.acceleration = gravityAcceleration * timeElapsed
+        }
+
+        if (kbInput.w.isPressed && !prevFrame.wasWPressed && !gameOver) {
+          playerTwo.yVel = 300
+          playerTwo.acceleration = -500
+
+        } else {
+          playerTwo.acceleration = gravityAcceleration * timeElapsed
+        }
+
+
+        player.yVel = player.yVel + player.acceleration
+        player.yPos = player.yPos + player.yVel * timeElapsed
+
+        playerTwo.yVel = playerTwo.yVel + playerTwo.acceleration
+        playerTwo.yPos = playerTwo.yPos + playerTwo.yVel * timeElapsed
+
+
+        if (player.yPos + player.height > 500) {
+          player.yPos = 500 - player.height
+          player.yVel = player.yVel * .9
+        }
+
+        if (playerTwo.yPos + playerTwo.height > 500) {
+          playerTwo.yPos = 500 - playerTwo.height
+          playerTwo.yVel = playerTwo.yVel * .9
+        }
 
 
 
-      prevFrame.wasSpacePressed = kbInput.space.isPressed
-      prevFrame.wasUpPressed = kbInput.up.isPressed
+        if (player.xPos + player.width >= 500) {
+          player.xPos = 500 - player.width
+        }
+
+        if (playerTwo.xPos + playerTwo.width >= 500) {
+          playerTwo.xPos = 500 - playerTwo.width
+        }
 
 
-      playerMove(gameOver)
+
+        if (player.xPos <= 0) {
+          player.xPos = 0
+        }
+
+        if (playerTwo.xPos <= 0) {
+          playerTwo.xPos = 0
+        }
+
+
+
+        if (size.xPos <= 0 || size.xPos + size.width >= 500) {
+          size.xVel *= -1
+        }
+
+        if (isRectangleInRectangle(target, player)) {
+          score += 3
+          target.xPos = (Math.random() * (500 - target.width - 50)) + 50
+          target.yPos = (Math.random() * (500 - target.height - 50)) + 100
+        }
+
+        if(twoPlayer) {
+          if (isRectangleInRectangle(target, playerTwo)) {
+            score += 3
+            target.xPos = (Math.random() * (500 - target.width - 50)) + 50
+            target.yPos = (Math.random() * (500 - target.height - 50)) + 100
+          }
+        }
+
+
+
+        if (isRectangleInRectangle(superTarget, player)) {
+          score += 7
+          superTarget.xPos = (Math.random() * (500 - superTarget.width - 50)) + 50
+          superTarget.yPos = (Math.random() * (100 - superTarget.height))
+        }
+
+        if(twoPlayer) {
+          if (isRectangleInRectangle(superTarget, playerTwo)) {
+            score += 7
+            superTarget.xPos = (Math.random() * (500 - superTarget.width - 50)) + 50
+            superTarget.yPos = (Math.random() * (100 - superTarget.height))
+          }
+        }
+
+
+
+        if (isRectangleInRectangle(size, player) && !gameOver && (size.yPos + size.height <= player.yPos + 15 || (size.yPos + size.height <= player.yPos + player.height - 15 && Math.sign(player.yVel) === 1))) {
+          size.yVel = -(Math.random() * 100 + 300)
+          size.yPos = player.yPos - size.height
+          size.xVel = (Math.random() - .5) * 350
+          score += 1
+          size.acceleration = 100 + (score * 2.5)
+
+        } else {
+          size.acceleration = gravityAcceleration * timeElapsed
+        }
+
+        if(twoPlayer) {
+          if (isRectangleInRectangle(size, playerTwo) && !gameOver && (size.yPos + size.height <= playerTwo.yPos + 15 || (size.yPos + size.height <= playerTwo.yPos + playerTwo.height - 15 && Math.sign(playerTwo.yVel) === 1))) {
+            size.yVel = -(Math.random() * 100 + 300)
+            size.yPos = playerTwo.yPos - size.height
+            size.xVel = (Math.random() - .5) * 350
+            score += 1
+            size.acceleration = 100 + (score * 2.5)
+
+          } else {
+            size.acceleration = gravityAcceleration * timeElapsed
+          }
+        }
+
+
+
+        if (player.yPos + player.height >= 500) {
+          player.yVel = 0
+        }
+
+        if (size.yPos + size.height >= 500 - size.height && lives >= 1) {
+          size.yVel = 0
+          size.yPos = 100
+          size.xPos = 250
+          player.xPos = 250 - player.width/2
+          player.yPos = 500 - player.height
+          playerTwo.xPos = 250 - playerTwo.width/2
+          playerTwo.yPos = 500 - playerTwo.height
+          size.xVel = 0
+          lives -= 1
+        }
+
+        if (lives === 0) {
+          size.yPos = 1000
+          gameOver = true
+        }
+        if (lives > 0 && score >= winAmount) {
+          gameOver = true
+        }
+
+        size.yVel = size.yVel + size.acceleration
+        size.yPos = size.yPos + size.yVel * timeElapsed
+
+
+
+        if(gameOver || (kbInput.r.isPressed && !prevFrame.wasRPressed)){
+          gameRestart()
+        }
+
+
+        prevFrame.wasSpacePressed = kbInput.space.isPressed
+        prevFrame.wasUpPressed = kbInput.up.isPressed
+        prevFrame.wasRPressed = kbInput.r.isPressed
+
+
+        playerMove(gameOver)
+        playerTwoMove(gameOver)
+      }
       window.requestAnimationFrame(gameLoop)
     }
 
@@ -288,6 +499,69 @@
       }
     }
 
+    function playerTwoMove(gameOver) {
+      if (!gameOver) {
+        if (!kbInput.d.isPressed && !kbInput.a.isPressed && !kbInput.w.isPressed) {
+          playerTwo.xVel = 0
+        }
+        if (kbInput.d.isPressed) {
+          if(lives === 3){
+            playerTwo.xVel = 200
+          }
+          if(lives === 2){
+            playerTwo.xVel = 225
+          }
+          if(lives === 1){
+            playerTwo.xVel = 250
+          }
+        }
+        if (kbInput.a.isPressed) {
+          if(lives === 3){
+            playerTwo.xVel = -200
+          }
+          if(lives === 2){
+            playerTwo.xVel = -225
+          }
+          if(lives === 1){
+            playerTwo.xVel = -250
+          }
+        }
+        if (kbInput.d.isPressed && kbInput.a.isPressed && kbInput.w.isPressed) {
+          playerTwo.xVel = 0
+        }
+        if(kbInput.s.isPressed){
+          playerTwo.yVel = 1000
+        }
+      }else{
+        playerTwo.xVel = 0
+        playerTwo.yVel = 0
+      }
+    }
+
+    function gameRestart(){
+      prevGameScore = score
+      if(score >= highScore){
+        highScore = score
+      }
+      lives = 3
+      score = 0
+      player.xPos = 250 - player.width/2
+      player.yPos = 500 - player.height
+      playerTwo.xPos = 250 - playerTwo.width/2
+      playerTwo.yPos = 500 - playerTwo.height
+      size.xPos = 250 - size.width
+      size.yPos = 335
+      startAnimation.size.xPos = 244
+      startAnimation.size.yPos = 250
+      target.xPos = (Math.random() * (500 - target.width - 50)) + 50
+      target.yPos = (Math.random() * (500 - target.height - 50)) + 100
+      superTarget.xPos = (Math.random() * (500 - superTarget.width - 50)) + 50
+      superTarget.yPos = (Math.random() * (100 - superTarget.height))
+      start = false
+      Endless = false
+      gameOver = false
+    }
+
 
     function isCircleInCircle(circle1, circle2){
       let distanceBetweenCircles = Math.sqrt(Math.pow(circle1.xPos - circle2.xPos, 2 ) + Math.pow(circle1.yPos - circle2.yPos, 2))
@@ -295,6 +569,18 @@
         return false
       }else{
         return true
+      }
+    }
+
+
+    function isPointInRect(xPoint, yPoint, rect) {
+      if (
+              xPoint >= rect.xPos && xPoint <= rect.xPos + rect.width &&
+              yPoint >= rect.yPos && yPoint <= rect.yPos + rect.height
+      ) {
+        return true
+      } else {
+        return false
       }
     }
 
@@ -367,7 +653,27 @@
       space : {
         value : " ",
         isPressed: false,
-      }
+      },
+      r : {
+        value : "r",
+        isPressed: false,
+      },
+      w : {
+        value : "w",
+        isPressed: false,
+      },
+      a : {
+        value : "a",
+        isPressed: false,
+      },
+      s : {
+        value : "s",
+        isPressed: false,
+      },
+      d : {
+        value : "d",
+        isPressed: false,
+      },
     }
 
     function keyHandler(event) {
@@ -391,6 +697,21 @@
       }
       if(event.key===kbInput.space.value){
         kbInput.space.isPressed = isPressed
+      }
+      if(event.key===kbInput.r.value){
+        kbInput.r.isPressed = isPressed
+      }
+      if(event.key===kbInput.w.value){
+        kbInput.w.isPressed = isPressed
+      }
+      if(event.key===kbInput.a.value){
+        kbInput.a.isPressed = isPressed
+      }
+      if(event.key===kbInput.s.value){
+        kbInput.s.isPressed = isPressed
+      }
+      if(event.key===kbInput.d.value){
+        kbInput.d.isPressed = isPressed
       }
     }
 
